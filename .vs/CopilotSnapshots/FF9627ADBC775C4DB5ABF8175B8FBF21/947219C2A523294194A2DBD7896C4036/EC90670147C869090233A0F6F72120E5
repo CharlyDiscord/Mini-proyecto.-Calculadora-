@@ -1,0 +1,190 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    x:Class="Calculadora.MainPage"
+    Shell.NavBarIsVisible="False"
+    BackgroundColor="#E9EDE8">
+
+    <!-- Estilos -->
+    <ContentPage.Resources>
+        <Style x:Key="Numero" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="#FFFFFF"/>
+            <Setter Property="TextColor" Value="#303B32"/>
+            <Setter Property="FontSize" Value="25"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="0"/>
+        </Style>
+
+        <Style x:Key="Operador" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="#D4E8D1"/>
+            <Setter Property="TextColor" Value="#315B36"/>
+            <Setter Property="FontSize" Value="25"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="0"/>
+        </Style>
+
+        <Style x:Key="Especial" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="#D5DCD3"/>
+            <Setter Property="TextColor" Value="#344236"/>
+            <Setter Property="FontSize" Value="17"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="0"/>
+        </Style>
+
+        <Style x:Key="Igual" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="#54875A"/>
+            <Setter Property="TextColor" Value="#FFFFFF"/>
+            <Setter Property="FontSize" Value="28"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="0"/>
+        </Style>
+    </ContentPage.Resources>
+
+    <Grid Padding="18"
+          RowDefinitions="2*,5*"
+          RowSpacing="15">
+
+        <!-- Pantalla -->
+        <Border Grid.Row="0"
+                BackgroundColor="#FFFFFF"
+                Stroke="#D5DDD3"
+                StrokeThickness="1"
+                Padding="15">
+
+            <Grid RowDefinitions="*,Auto">
+
+                <Label x:Name="lblOperacion"
+                       Text=""
+                       FontSize="20"
+                       TextColor="#778176"
+                       HorizontalTextAlignment="End"
+                       VerticalTextAlignment="Center"
+                       LineBreakMode="CharacterWrap"/>
+
+                <Label x:Name="lblResultado"
+                       Grid.Row="1"
+                       Text="0"
+                       FontSize="44"
+                       FontAttributes="Bold"
+                       TextColor="#27352A"
+                       HorizontalTextAlignment="End"
+                       VerticalTextAlignment="Center"
+                       LineBreakMode="CharacterWrap"/>
+
+            </Grid>
+        </Border>
+
+        <!-- Teclado -->
+        <Grid Grid.Row="1"
+              RowDefinitions="*,*,*,*,*"
+              ColumnDefinitions="*,*,*,*"
+              RowSpacing="9"
+              ColumnSpacing="9">
+
+            <!-- Fila 1 -->
+            <Button Grid.Row="0" Grid.Column="0"
+                    Text="AC"
+                    Clicked="OnButtonClicked"
+                    Style="{StaticResource Especial}"/>
+
+            <Button Grid.Row="0" Grid.Column="1"
+                    Text="DEL"
+                    Clicked="OnButtonClicked"
+                    Style="{StaticResource Especial}"/>
+
+            <Button Grid.Row="0" Grid.Column="2"
+                    Text="%"
+                    Clicked="OnButtonClicked"
+                    Style="{StaticResource Operador}"/>
+
+            <Button Grid.Row="0" Grid.Column="3"
+                    Text="÷"
+                    Clicked="OnButtonClicked"
+                    Style="{StaticResource Operador}"/>
+
+            <!-- Fila 2 -->
+            <Button Grid.Row="1" Grid.Column="0"
+                    Text="7"
+                    Clicked="OnButtonClicked"
+                    Style="{StaticResource Numero}"/>
+
+            <Button Grid.Row="1" Grid.Column="1"
+                    Text="8"
+                    Clicked="OnButtonClicked"
+                    Style="{StaticResource Numero}"/>
+
+            <Button Grid.Row="1" Grid.Column="2"
+                    Text="9"
+                    Clicked="OnButtonClicked"
+                    Style="{StaticResource Numero}"/>
+
+            <Button Grid.Row="1" Grid.Column="3"
+                    Text="×"
+                    Clicked="OnButtonClicked"
+                    Style="{StaticResource Operador}"/>
+
+            <!-- Fila 3 -->
+            <Button Grid.Row="2" Grid.Column="0"
+                    Text="4"
+                    Clicked="OnButtonClicked"
+                    Style="{StaticResource Numero}"/>
+
+            <Button Grid.Row="2" Grid.Column="1"
+                    Text="5"
+                    Clicked="OnButtonClicked"
+                    Style="{StaticResource Numero}"/>
+
+            <Button Grid.Row="2" Grid.Column="2"
+                    Text="6"
+                    Clicked="OnButtonClicked"
+                    Style="{StaticResource Numero}"/>
+
+            <Button Grid.Row="2" Grid.Column="3"
+                    Text="-"
+                    Clicked="OnButtonClicked"
+                    Style="{StaticResource Operador}"/>
+
+            <!-- Fila 4 -->
+            <Button Grid.Row="3" Grid.Column="0"
+                    Text="1"
+                    Clicked="OnButtonClicked"
+                    Style="{StaticResource Numero}"/>
+
+            <Button Grid.Row="3" Grid.Column="1"
+                    Text="2"
+                    Clicked="OnButtonClicked"
+                    Style="{StaticResource Numero}"/>
+
+            <Button Grid.Row="3" Grid.Column="2"
+                    Text="3"
+                    Clicked="OnButtonClicked"
+                    Style="{StaticResource Numero}"/>
+
+            <Button Grid.Row="3" Grid.Column="3"
+                    Text="+"
+                    Clicked="OnButtonClicked"
+                    Style="{StaticResource Operador}"/>
+
+            <!-- Fila 5 -->
+            <Button Grid.Row="4" Grid.Column="0"
+                    Grid.ColumnSpan="2"
+                    Text="0"
+                    Clicked="OnButtonClicked"
+                    Style="{StaticResource Numero}"/>
+
+            <Button Grid.Row="4" Grid.Column="2"
+                    Text="."
+                    Clicked="OnButtonClicked"
+                    Style="{StaticResource Numero}"/>
+
+            <Button Grid.Row="4" Grid.Column="3"
+                    Text="="
+                    Clicked="OnButtonClicked"
+                    Style="{StaticResource Igual}"/>
+
+        </Grid>
+    </Grid>
+
+
+</ContentPage>

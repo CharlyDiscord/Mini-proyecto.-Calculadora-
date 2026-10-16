@@ -1,0 +1,386 @@
+﻿using System.Globalization;
+
+namespace Calculadora
+{
+    public partial class MainPage : ContentPage
+    {
+        string operacion = "";
+        bool resultadoMostrado = false;
+
+        private Label lblOperacionRef;
+        private Label lblResultadoRef;
+
+        public MainPage()
+        {
+            InitializeComponent();
+
+            // Obtener referencias a los controles declarados en XAML
+            lblOperacionRef = this.FindByName<Label>("lblOperacion");
+            lblResultadoRef = this.FindByName<Label>("lblResultado");
+        }
+
+        private void OnButtonClicked(object sender, EventArgs e)
+        {
+            Button boton = (Button)sender;
+            string valor = boton.Text;
+
+            // Limpiar toda la pantalla
+            if (valor == "AC")
+            {
+                operacion = "";
+                resultadoMostrado = false;
+
+                lblOperacionRef.Text = "";
+                lblResultadoRef.Text = "0";
+                return;
+            }
+
+            // Borrar el último carácter
+            if (valor == "DEL")
+            {
+                if (resultadoMostrado)
+                {
+                    operacion = "";
+                    resultadoMostrado = false;
+                }
+                else if (operacion.Length > 0)
+                {
+                    operacion = operacion.Substring(
+                        0, operacion.Length - 1);
+                }
+
+                ActualizarPantalla();
+                return;
+            }
+
+            // Calcular resultado
+            if (valor == "=")
+            {
+                if (operacion == "")
+                    return;
+
+                try
+                {
+                    string expresion = operacion;
+
+                    double resultado =
+                        new CalculadoraMatematica(expresion).Calcular();
+
+                    lblOperacion.Text = expresion + " =";
+
+                    operacion = resultado.ToString(
+                        "G15", CultureInfo.InvariantCulture);
+
+                    lblResultado.Text = operacion;
+                    resultadoMostrado = true;
+                }
+                catch
+                {
+                    lblOperacion.Text = "";
+                    lblResultado.Text = "Error";
+                    operacion = "";
+                    resultadoMostrado = true;
+                }
+
+                return;
+            }
+
+            // Evitar que un resultado anterior se mezcle
+            // con una operación nueva
+            if (resultadoMostrado)
+            {
+                if (EsOperador(valor) || valor == "%")
+                {
+                    resultadoMostrado = false;
+                }
+                else
+                {
+                    operacion = "";
+                    resultadoMostrado = false;
+                    lblOperacion.Text = "";
+                }
+            }
+
+            // Agregar punto decimal
+            if (valor == ".")
+            {
+                if (operacion.Length == 0 ||
+                    EsOperador(operacion[^1].ToString()) ||
+                    operacion[^1] == '%')
+                {
+                    operacion += "0.";
+                }
+                else
+                {
+                    string numero = ObtenerUltimoNumero();
+
+                    if (!numero.Contains("."))
+                        operacion += ".";
+                }
+
+                ActualizarPantalla();
+                return;
+            }
+
+            // Agregar porcentaje
+            if (valor == "%")
+            {
+                if (operacion.Length > 0 &&
+                    (char.IsDigit(operacion[^1]) ||
+                     operacion[^1] == ')'))
+                {
+                    operacion += "%";
+                }
+
+                ActualizarPantalla();
+                return;
+            }
+
+            // Agregar operadores
+            if (EsOperador(valor))
+            {
+                if (operacion.Length == 0)
+                {
+                    if (valor == "-")
+                        operacion = "-";
+
+                    ActualizarPantalla();
+                    return;
+                }
+
+                char ultimo = operacion[^1];
+
+                if (EsOperador(ultimo.ToString()))
+                {
+                    // Permitir números negativos, por ejemplo 5*-2
+                    if (valor == "-" &&
+                        ultimo != '-')
+                    {
+                        operacion += "-";
+                    }
+                    else if (operacion.Length > 1 &&
+                             EsOperador(
+                                 operacion[^2].ToString()))
+                    {
+                        operacion = operacion.Substring(
+                            0, operacion.Length - 2) + valor;
+                    }
+                    else
+                    {
+                        operacion = operacion.Substring(
+                            0, operacion.Length - 1) + valor;
+                    }
+                }
+                else if (ultimo != '.')
+                {
+                    operacion += valor;
+                }
+
+                ActualizarPantalla();
+                return;
+            }
+
+            // Solo aceptar números del 0 al 9
+            if (valor.Length == 1 &&
+                char.IsDigit(valor[0]))
+            {
+                operacion += valor;
+                ActualizarPantalla();
+            }
+        }
+
+        private bool EsOperador(string valor)
+        {
+            return valor == "+" ||
+                   valor == "-" ||
+                   valor == "×" ||
+                   valor == "÷";
+        }
+
+        private string ObtenerUltimoNumero()
+        {
+            int posicion = operacion.Length - 1;
+
+            while (posicion >= 0 &&
+                   (char.IsDigit(operacion[posicion]) ||
+                    operacion[posicion] == '.'))
+            {
+                posicion--;
+            }
+
+            return operacion.Substring(posicion + 1);
+        }
+
+        private void ActualizarPantalla()
+        {
+            lblResultado.Text =
+                operacion == "" || operacion == "-"
+                    ? operacion == "" ? "0" : "-"
+                    : operacion;
+        }
+    }
+
+    // Clase encargada de resolver las operaciones
+    public class CalculadoraMatematica
+    {
+        private readonly string texto;
+        private int posicion;
+
+        public CalculadoraMatematica(string expresion)
+        {
+            texto = expresion
+                .Replace("×", "*")
+                .Replace("÷", "/");
+
+            posicion = 0;
+        }
+
+        public double Calcular()
+        {
+            double resultado = Expresion();
+
+            if (posicion != texto.Length)
+                throw new Exception("Expresión inválida");
+
+            if (double.IsNaN(resultado) ||
+                double.IsInfinity(resultado))
+            {
+                throw new Exception("Resultado inválido");
+            }
+
+            return resultado;
+        }
+
+        // Sumas y restas
+        private double Expresion()
+        {
+            double resultado = Termino();
+
+            while (posicion < texto.Length)
+            {
+                char operador = texto[posicion];
+
+                if (operador == '+' || operador == '-')
+                {
+                    posicion++;
+                    double numero = Termino();
+
+                    if (operador == '+')
+                        resultado += numero;
+                    else
+                        resultado -= numero;
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            return resultado;
+        }
+
+        // Multiplicaciones y divisiones
+        private double Termino()
+        {
+            double resultado = Factor();
+
+            while (posicion < texto.Length)
+            {
+                char operador = texto[posicion];
+
+                if (operador == '*' || operador == '/')
+                {
+                    posicion++;
+                    double numero = Factor();
+
+                    if (operador == '*')
+                    {
+                        resultado *= numero;
+                    }
+                    else
+                    {
+                        if (numero == 0)
+                            throw new Exception(
+                                "No se puede dividir entre cero");
+
+                        resultado /= numero;
+                    }
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            return resultado;
+        }
+
+        // Números, negativos y porcentajes
+        private double Factor()
+        {
+            if (posicion >= texto.Length)
+                throw new Exception("Falta un número");
+
+            // Número negativo
+            if (texto[posicion] == '-')
+            {
+                posicion++;
+                return -Factor();
+            }
+
+            // Número positivo
+            if (texto[posicion] == '+')
+            {
+                posicion++;
+                return Factor();
+            }
+
+            int inicio = posicion;
+            bool tienePunto = false;
+            bool tieneDigito = false;
+
+            while (posicion < texto.Length)
+            {
+                char caracter = texto[posicion];
+
+                if (char.IsDigit(caracter))
+                {
+                    tieneDigito = true;
+                    posicion++;
+                }
+                else if (caracter == '.')
+                {
+                    if (tienePunto)
+                        throw new Exception(
+                            "Número decimal inválido");
+
+                    tienePunto = true;
+                    posicion++;
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            if (!tieneDigito)
+                throw new Exception("Número inválido");
+
+            string numeroTexto = texto.Substring(
+                inicio, posicion - inicio);
+
+            double numero = double.Parse(
+                numeroTexto, CultureInfo.InvariantCulture);
+
+            // Convertir porcentaje a decimal
+            while (posicion < texto.Length &&
+                   texto[posicion] == '%')
+            {
+                numero /= 100;
+                posicion++;
+            }
+
+            return numero;
+        }
+    }
+}
